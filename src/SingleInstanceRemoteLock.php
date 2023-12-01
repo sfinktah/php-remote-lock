@@ -1,7 +1,7 @@
 <?php
 /** @noinspection PhpFullyQualifiedNameUsageInspection */
 
-namespace Sfinktah\Shopify;
+namespace Sfinktah\RemoteLock;
 
 
 class SingleInstanceRemoteLock implements IInstanceLock
@@ -65,21 +65,21 @@ class SingleInstanceRemoteLock implements IInstanceLock
 
         // Step 3: Use CurlHttpClient to send the request
         try {
-            echo 'Request         : ' . $url . PHP_EOL;
-            echo 'Parameters      : ' . json_encode($params) . PHP_EOL;
+            self::printf('Request         : ' . $url . PHP_EOL);
+            self::printf('Parameters      : ' . json_encode($params) . PHP_EOL);
             $response = $client->sendRequest($request);
 
             // Step 4: Retrieve and check the HTTP status code
             $statusCode = $response->getStatusCode();
 
-            echo 'HTTP Status Code: ' . $statusCode . PHP_EOL;
+            self::printf('HTTP Status Code: ' . $statusCode . PHP_EOL);
             // it's a stream, you can only use it once!
             // echo 'Response Body   : ' . $response->getBody()->getContents() . PHP_EOL;
 
             return $response;
         } catch (\Exception $e) {
             // Handle exceptions, such as cURL errors or other runtime issues
-            echo 'Error           : ' . $e->getMessage() . PHP_EOL;
+            self::printf('Error           : ' . $e->getMessage() . PHP_EOL);
             return null;
         }
     }
@@ -133,7 +133,7 @@ class SingleInstanceRemoteLock implements IInstanceLock
             }
             else {
                 $json = json_decode($response->getBody()->getContents(), true);
-                echo json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+                self::printf(json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
                 if (is_array($json) && count($json)) {
                     $this->key = $json['key'];
                     $this->secret = $json['secret'];

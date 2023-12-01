@@ -1,6 +1,6 @@
 <?php
 
-namespace Sfinktah\Shopify;
+namespace Sfinktah\RemoteLock;
 
 interface IInstanceLock
 {

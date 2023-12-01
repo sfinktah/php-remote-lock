@@ -1,6 +1,6 @@
 <?php
 
-namespace Sfinktah\Shopify;
+namespace Sfinktah\RemoteLock;
 
 class SingleInstanceLock implements IInstanceLock
 {
