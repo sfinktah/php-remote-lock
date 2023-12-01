@@ -1,0 +1,31 @@
+{
+    "name": "sfinktah/php-remote-lock",
+    "description": "Private simple network aware mutex lock for PHP",
+    "type": "library",
+    "keywords": [
+        "lock",
+        "mutex",
+        "network",
+        "remote"
+    ],
+    "require": {
+        "php": "^7.3|^8.0",
+        "ext-ctype": "*",
+        "ext-hash": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-curl": "*",
+        "ext-pcntl": "*"
+    },
+    "authors": [
+        {
+            "name": "Christopher Anderson",
+            "email": "sfinktah@packagist.spamtrak.org"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Sfinktah\\RemoteLock\\": "src/"
+        }
+    }
+}
