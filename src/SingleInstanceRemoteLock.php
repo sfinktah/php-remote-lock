@@ -31,6 +31,8 @@ class SingleInstanceRemoteLock implements IInstanceLock
      */
     private $secret;
 
+    public static $debug = false;
+
     public function __construct(string $lockName, string $lockServer = "https://markt14.fluffyduck.au") {
         if (!$lockName) {
             $lockName = preg_replace('#^.*/#', '', $argv[1]) ?? 'singleInstanceRemoteLock';
@@ -47,9 +49,9 @@ class SingleInstanceRemoteLock implements IInstanceLock
         return posix_isatty(\STDOUT);
     }
 
-    public static function printf($fmt, ...$args): void {
-        if (self::isatty())
-            printf($fmt, ...$args);
+    public static function printf(...$args): void {
+        if (self::$debug && self::isatty())
+            printf(...$args);
     }
 
     public function request($url, $params = null): ?\Psr\Http\Message\ResponseInterface {
