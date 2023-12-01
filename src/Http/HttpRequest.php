@@ -1,7 +1,7 @@
 <?php
 /** @noinspection PhpFullyQualifiedNameUsageInspection */
 
-namespace Sfinktah\Shopify\Http;
+namespace Sfinktah\RemoteLock\Http;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -47,7 +47,7 @@ class HttpRequest implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function withRequestTarget($requestTarget) {
+    public function withRequestTarget(string $requestTarget) {
         if (strpos($requestTarget, ' ') !== false) {
             throw new \InvalidArgumentException('Invalid request target provided; cannot contain whitespace');
         }
@@ -68,7 +68,7 @@ class HttpRequest implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function withMethod($method) {
+    public function withMethod(string $method) {
         $new = clone $this;
         $new->method = strtoupper($method);
 
@@ -85,7 +85,7 @@ class HttpRequest implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function withUri(UriInterface $uri, $preserveHost = false) {
+    public function withUri(UriInterface $uri, bool $preserveHost = false) {
         $new = clone $this;
         $new->uri = $uri;
 
@@ -111,14 +111,14 @@ class HttpRequest implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function hasHeader($name): bool {
+    public function hasHeader(string $name): bool {
         return isset($this->headers[strtolower($name)]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getHeader($name) {
+    public function getHeader(string $name) {
         $name = strtolower($name);
         return $this->headers[$name] ?? [];
     }
@@ -126,14 +126,14 @@ class HttpRequest implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getHeaderLine($name): string {
+    public function getHeaderLine(string $name): string {
         return implode(', ', $this->getHeader($name));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function withHeader($name, $value) {
+    public function withHeader(string $name, $value) {
         $normalized = strtolower($name);
         $new = clone $this;
         $new->headers[$normalized] = is_array($value) ? $value : [$value];
@@ -144,7 +144,7 @@ class HttpRequest implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function withAddedHeader($name, $value) {
+    public function withAddedHeader(string $name, $value) {
         $normalized = strtolower($name);
         $new = clone $this;
         $new->headers[$normalized] = array_merge($this->getHeader($normalized), is_array($value) ? $value : [$value]);
@@ -155,7 +155,7 @@ class HttpRequest implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function withoutHeader($name) {
+    public function withoutHeader(string $name) {
         $normalized = strtolower($name);
         $new = clone $this;
         unset($new->headers[$normalized]);
@@ -190,14 +190,14 @@ class HttpRequest implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function withProtocolVersion($version) {
+    public function withProtocolVersion(string $version) {
         $new = clone $this;
         $new->protocolVersion = $version;
 
         return $new;
     }
 
-    public static function make(...$arguments): static {
+    public static function make(...$arguments): HttpRequest {
         return new static(...$arguments);
     }
 

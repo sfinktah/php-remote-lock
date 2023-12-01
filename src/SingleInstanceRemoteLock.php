@@ -31,7 +31,6 @@ class SingleInstanceRemoteLock implements IInstanceLock
      */
     private $secret;
 
-    /** @noinspection HttpUrlsUsage */
     public function __construct(string $lockName, string $lockServer = "https://markt14.fluffyduck.au") {
         if (!$lockName) {
             $lockName = preg_replace('#^.*/#', '', $argv[1]) ?? 'singleInstanceRemoteLock';
@@ -55,14 +54,14 @@ class SingleInstanceRemoteLock implements IInstanceLock
 
     public function request($url, $params = null): ?\Psr\Http\Message\ResponseInterface {
         // Step 1: Instantiate CurlHttpClient
-        $client = new \Sfinktah\Shopify\Http\CurlHttpClient();
+        $client = new \Sfinktah\RemoteLock\Http\CurlHttpClient();
 
         if (!empty($params)) {
             // Append parameters to the URL
             $url .= '?' . http_build_query($params);
         }
 
-        $request = new \Sfinktah\Shopify\Http\HttpRequest('GET', $url);
+        $request = new \Sfinktah\RemoteLock\Http\HttpRequest('GET', $url);
 
         // Step 3: Use CurlHttpClient to send the request
         try {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Sfinktah\Shopify\Http;
+namespace Sfinktah\RemoteLock\Http;
 
 use Psr\Http\Message\UriInterface;
 
@@ -64,8 +64,10 @@ class HttpUri implements UriInterface
     /**
      * {@inheritdoc}
      */
-    public function getUserInfo() {
-        return $this->userInfo;
+    public function getUserInfo(): string {
+        $user = !empty($this->user) ? $this->user : '';
+        $pass = !empty($this->pass) ? ':' . $this->pass : '';
+        return ($user || $pass) ? "$pass@" : '';
     }
 
     /**
@@ -106,7 +108,7 @@ class HttpUri implements UriInterface
     /**
      * {@inheritdoc}
      */
-    public function withScheme($scheme) {
+    public function withScheme(string $scheme) {
         $new = clone $this;
         $new->scheme = $scheme;
 
@@ -116,15 +118,10 @@ class HttpUri implements UriInterface
     /**
      * {@inheritdoc}
      */
-    public function withUserInfo($user, $password = null) {
-        $userInfo = $user;
-
-        if ($password !== null) {
-            $userInfo .= ':' . $password;
-        }
-
+    public function withUserInfo(string $user, ?string $password = null) {
         $new = clone $this;
-        $new->userInfo = $userInfo;
+        $new->user = $user;
+        $new->pass = $password;
 
         return $new;
     }
@@ -132,7 +129,7 @@ class HttpUri implements UriInterface
     /**
      * {@inheritdoc}
      */
-    public function withHost($host) {
+    public function withHost(string $host) {
         $new = clone $this;
         $new->host = $host;
 
@@ -142,7 +139,7 @@ class HttpUri implements UriInterface
     /**
      * {@inheritdoc}
      */
-    public function withPort($port) {
+    public function withPort(?int $port) {
         $new = clone $this;
         $new->port = $port;
 
@@ -152,7 +149,7 @@ class HttpUri implements UriInterface
     /**
      * {@inheritdoc}
      */
-    public function withPath($path) {
+    public function withPath(string $path) {
         $new = clone $this;
         $new->path = $path;
 
@@ -162,7 +159,7 @@ class HttpUri implements UriInterface
     /**
      * {@inheritdoc}
      */
-    public function withQuery($query) {
+    public function withQuery(string $query) {
         $new = clone $this;
         $new->query = $query;
 
@@ -172,7 +169,7 @@ class HttpUri implements UriInterface
     /**
      * {@inheritdoc}
      */
-    public function withFragment($fragment) {
+    public function withFragment(string $fragment) {
         $new = clone $this;
         $new->fragment = $fragment;
 
@@ -207,7 +204,7 @@ class HttpUri implements UriInterface
         return $uri;
     }
 
-    public function toString() {
+    public function toString(): string {
         $scheme = !empty($this->scheme) ? $this->scheme . '://' : '';
         $host = !empty($this->host) ? $this->host : '';
         $port = !empty($this->port) ? ':' . $this->port : '';
@@ -221,7 +218,7 @@ class HttpUri implements UriInterface
         return "$scheme$user$pass$host$port$path$query$fragment";
     }
 
-    public static function make(...$arguments): static {
+    public static function make(...$arguments): HttpUri {
         return new static(...$arguments);
     }
 }

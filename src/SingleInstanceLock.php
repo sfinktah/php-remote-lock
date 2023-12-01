@@ -4,8 +4,8 @@ namespace Sfinktah\Shopify;
 
 class SingleInstanceLock implements IInstanceLock
 {
-    private string $lockFile;
-    private int $pid;
+    private $lockFile;
+    private $pid;
 
     public function __construct($scriptName = null) {
         if (!$scriptName) {
@@ -15,7 +15,7 @@ class SingleInstanceLock implements IInstanceLock
         $this->pid = getmypid();
     }
 
-    public function acquire($waitSeconds = 0) {
+    public function acquire($waitSeconds = 0): bool {
         $startTime = time();
         while (file_exists($this->lockFile)) {
             $oldPid = (int) file_get_contents($this->lockFile);
@@ -46,7 +46,7 @@ class SingleInstanceLock implements IInstanceLock
         }
     }
 
-    private function isProcessRunning($pid) {
+    private function isProcessRunning($pid): bool {
         if (empty($pid) || !is_numeric($pid)) {
             return false;
         }

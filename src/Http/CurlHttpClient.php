@@ -1,7 +1,7 @@
 <?php
 /** @noinspection PhpFullyQualifiedNameUsageInspection */
 
-namespace Sfinktah\Shopify\Http;
+namespace Sfinktah\RemoteLock\Http;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;

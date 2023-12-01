@@ -1,6 +1,6 @@
 <?php
 
-namespace Sfinktah\Shopify\Http;
+namespace Sfinktah\RemoteLock\Http;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -21,7 +21,7 @@ class HttpResponse implements ResponseInterface
      * @param StreamInterface   $body         HTTP response body.
      * @param string            $reasonPhrase Reason phrase (optional).
      */
-    public function __construct($statusCode, array $headers, StreamInterface $body, $reasonPhrase = '')
+    public function __construct(int $statusCode, array $headers, StreamInterface $body, string $reasonPhrase = '')
     {
         $this->statusCode = $statusCode;
         $this->headers = $headers;
@@ -32,31 +32,28 @@ class HttpResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
-    public function getStatusCode()
-    {
+    public function getStatusCode(): int {
         return $this->statusCode;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getReasonPhrase()
-    {
+    public function getReasonPhrase(): string {
         return $this->reasonPhrase;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getHeaders()
-    {
+    public function getHeaders(): array {
         return $this->headers;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getHeader($name)
+    public function getHeader(string $name)
     {
         $normalized = strtolower($name);
         return $this->headers[$normalized] ?? [];
@@ -65,15 +62,14 @@ class HttpResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
-    public function getBody()
-    {
+    public function getBody(): StreamInterface {
         return $this->body;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function withStatus($code, $reasonPhrase = '')
+    public function withStatus(int $code, string $reasonPhrase = '')
     {
         $new = clone $this;
         $new->statusCode = $code;
@@ -85,7 +81,7 @@ class HttpResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
-    public function withHeader($name, $value)
+    public function withHeader(string $name, $value)
     {
         $normalized = strtolower($name);
         $new = clone $this;
@@ -97,7 +93,7 @@ class HttpResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
-    public function withAddedHeader($name, $value)
+    public function withAddedHeader(string $name, $value)
     {
         $normalized = strtolower($name);
         $new = clone $this;
@@ -109,7 +105,7 @@ class HttpResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
-    public function withoutHeader($name)
+    public function withoutHeader(string $name)
     {
         $normalized = strtolower($name);
         $new = clone $this;
@@ -155,7 +151,7 @@ class HttpResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
-    public function withProtocolVersion($version)
+    public function withProtocolVersion(string $version)
     {
         $new = clone $this;
         $new->protocolVersion = $version;
@@ -166,7 +162,7 @@ class HttpResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
-    public function getHeaderLine($name): string {
+    public function getHeaderLine(string $name): string {
         $normalized = strtolower($name);
         return implode(', ', $this->getHeader($normalized));
     }

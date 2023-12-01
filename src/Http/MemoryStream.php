@@ -1,6 +1,6 @@
 <?php
 
-namespace Sfinktah\Shopify\Http;
+namespace Sfinktah\RemoteLock\Http;
 
 use Psr\Http\Message\StreamInterface;
 
@@ -86,7 +86,7 @@ class MemoryStream implements StreamInterface
     /**
      * {@inheritdoc}
      */
-    public function seek($offset, $whence = SEEK_SET): bool {
+    public function seek(int $offset, int $whence = SEEK_SET): bool {
         return is_resource($this->stream) && fseek($this->stream, $offset, $whence) === 0;
     }
 
@@ -107,7 +107,7 @@ class MemoryStream implements StreamInterface
     /**
      * {@inheritdoc}
      */
-    public function write($string)
+    public function write(string $string)
     {
         return is_resource($this->stream) ? fwrite($this->stream, $string) : false;
     }
@@ -122,7 +122,7 @@ class MemoryStream implements StreamInterface
     /**
      * {@inheritdoc}
      */
-    public function read($length)
+    public function read(int $length)
     {
         return is_resource($this->stream) ? fread($this->stream, $length) : '';
     }
@@ -138,7 +138,7 @@ class MemoryStream implements StreamInterface
     /**
      * {@inheritdoc}
      */
-    public function getMetadata($key = null)
+    public function getMetadata(?string $key = null)
     {
         if (!is_resource($this->stream)) {
             return $key ? null : [];
@@ -153,7 +153,7 @@ class MemoryStream implements StreamInterface
         return $meta[$key] ?? null;
     }
 
-    public static function make(...$arguments): static {
+    public static function make(...$arguments): MemoryStream {
         return new static(...$arguments);
     }
 }
