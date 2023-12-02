@@ -139,11 +139,11 @@ class SingleInstanceRemoteLock implements IInstanceLock
                 if (is_array($json) && count($json)) {
                     $this->key = $json['key'];
                     $this->secret = $json['secret'];
-                    register_shutdown_function([$this, 'release']);
 
                     $pid = pcntl_fork();
                     if ($pid == 0) {
                         // child
+                        register_shutdown_function([$this, 'release']);
                         $callback(...$args);
                         self::printf("Child returning, releasing lock...\n");
                         $this->release();

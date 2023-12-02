@@ -19,7 +19,7 @@ require_once "RemoteLock/RemoteLock.php";
 ```php
 function main(...$args) {
     $lock = new \Sfinktah\RemoteLock\SingleInstanceRemoteLock('lock_name', 'https://lockserver');
-    if ($lock->lockCall(60 /* 1 minute */, function(...$args) {
+    if ($lock->lockCall(3600 /* 1 hour */, function(...$args) {
         doWork(...$args);
     }, ...$args)) {
         printf("Work Done\n");
