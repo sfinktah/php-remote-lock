@@ -18,7 +18,7 @@ require_once "RemoteLock/RemoteLock.php";
 
 ```php
 function main(...$args) {
-    $lock = new \Sfinktah\RemoteLock\SingleInstanceRemoteLock('lock_name', 'https://lockserver');
+    $lock = new \Sfinktah\RemoteLock\SingleInstanceRemoteLock('lock_name', 'https://markt14.streetfx.au');
     if ($lock->lockCall(3600 /* 1 hour */, function(...$args) {
         doWork(...$args);
     }, ...$args)) {
