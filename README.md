@@ -6,14 +6,15 @@
 
 ## Without composer
 
-git clone https://github.com/sfinktah/php-remote-lock /path/to/project-root/RemoteLock
+`git clone https://github.com/sfinktah/php-remote-lock /path/to/project-root/RemoteLock`
+
 `/path/to/project-root/index.php`
 ```php
 <?php
 require_once "RemoteLock/RemoteLock.php";
 ```
 
-## With or without composer
+## Obtaining a lock
 
 ```php
 function main(...$args) {
