@@ -1,16 +1,32 @@
 # Using the locking client
 
+## With composer
+
 `composer require php-remote-lock`
 
+## Without composer
+
+git clone https://github.com/sfinktah/php-remote-lock /path/to/project-root/RemoteLock
+`/path/to/project-root/index.php`
 ```php
-$lock = new \Sfinktah\RemoteLock\SingleInstanceRemoteLock('lock_name', 'https://lockserver');
-printf("* Acquiring lock...\n");
-if (!$lock->acquire(60 * 60)) {
-    printf("Failed to acquire lock within 60 minutes\n");
-    return false;
+<?php
+require_once "RemoteLock/RemoteLock.php";
+```
+
+## With or without composer
+
+```php
+function main(...$args) {
+    $lock = new \Sfinktah\RemoteLock\SingleInstanceRemoteLock('lock_name', 'https://lockserver');
+    if ($lock->lockCall(60 /* 1 minute */, function(...$args) {
+        doWork(...$args);
+    }, ...$args)) {
+        printf("Work Done\n");
+    }
+    else {
+        printf("Failed to acquire lock\n");
+    }
 }
-// Do stuff
-$lock->release();
 
 ```
 
@@ -37,7 +53,7 @@ sudo systemctl start php-remote-lock.service
 sudo systemctl show php-remote-lock.service
 ```
 
-`/etc/nginx/`
+`/etc/nginx/nginx.conf`
 ```nginx
 server {
     # ...
@@ -48,4 +64,9 @@ server {
 
     # ...
 }
+```
+
+```sh
+sudo nginx -t &&
+sudo systemctl restart nginx
 ```
