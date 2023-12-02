@@ -31,7 +31,7 @@ class SingleInstanceRemoteLock implements IInstanceLock
      */
     private $secret;
 
-    public static $debug = false;
+    public static $debug = true;
 
     public function __construct(string $lockName, string $lockServer = "https://markt14.fluffyduck.au") {
         if (!$lockName) {
@@ -49,9 +49,9 @@ class SingleInstanceRemoteLock implements IInstanceLock
         return posix_isatty(\STDOUT);
     }
 
-    public static function printf(...$args): void {
+    public static function printf($fmt, ...$args): void {
         if (self::$debug && self::isatty())
-            printf(...$args);
+            printf($fmt, ...$args);
     }
 
     public function request($url, $params = null): ?\Psr\Http\Message\ResponseInterface {
@@ -67,21 +67,21 @@ class SingleInstanceRemoteLock implements IInstanceLock
 
         // Step 3: Use CurlHttpClient to send the request
         try {
-            self::printf('Request         : ' . $url . PHP_EOL);
-            self::printf('Parameters      : ' . json_encode($params) . PHP_EOL);
+            self::printf("%s", 'Request         : ' . $url . PHP_EOL);
+            self::printf("%s", 'Parameters      : ' . json_encode($params) . PHP_EOL);
             $response = $client->sendRequest($request);
 
             // Step 4: Retrieve and check the HTTP status code
             $statusCode = $response->getStatusCode();
 
-            self::printf('HTTP Status Code: ' . $statusCode . PHP_EOL);
+            self::printf("%s", 'HTTP Status Code: ' . $statusCode . PHP_EOL);
             // it's a stream, you can only use it once!
             // echo 'Response Body   : ' . $response->getBody()->getContents() . PHP_EOL;
 
             return $response;
         } catch (\Exception $e) {
             // Handle exceptions, such as cURL errors or other runtime issues
-            self::printf('Error           : ' . $e->getMessage() . PHP_EOL);
+            self::printf("%s", 'Error           : ' . $e->getMessage() . PHP_EOL);
             return null;
         }
     }
@@ -93,21 +93,21 @@ class SingleInstanceRemoteLock implements IInstanceLock
         } else if ($pid) {
             // we are the parent
             while (true) {
+                sleep(60); // Wait for 1 minute before renewing.
                 $res = pcntl_waitpid($pid, $status, WNOHANG);
 
                 // If the process has already exited
                 if ($res == -1 || $res > 0) {
                     break;
                 }
-                sleep(60); // Wait for 1 minute before renewing.
-                self::printf("Renewing lock...\n");
+                self::printf("%s", "Renewing lock...\n");
                 /** @noinspection PhpUnusedLocalVariableInspection */
                 $response = $this->request("$this->lockServer/lock/api/renew", [
                         'key' => $this->key,
                         'secret' => $this->secret,
                     ]);
                 if ($response->getStatusCode() > 299) {
-                    self::printf("Lock is toast, abandoning watcher fork\n");
+                    self::printf("Lock is toast, abandoning watcher fork-parent\n");
                     break;
                 }
             }
@@ -118,9 +118,85 @@ class SingleInstanceRemoteLock implements IInstanceLock
         return $pid;
     }
 
+    public function lockCall($waitSeconds, callable $callback, ...$args): bool {
+        $startTime = time();
+        self::printf("%s", "Acquiring lock...\n");
+        while (true) {
+            $response = $this->request("$this->lockServer/lock/api/acquire", [
+                'host' => $this->hostName,
+                'pid' => $this->pid,
+                'lock_name' => $this->lockName,
+            ]);
+            if (is_null($response)) {
+                self::printf("Couldn't acquire lock...\n");
+            }
+            elseif ($response->getStatusCode() > 299) {
+                self::printf("Couldn't acquire lock [%s]...\n", $response->getReasonPhrase());
+            }
+            else {
+                $json = json_decode($response->getBody()->getContents(), true);
+                self::printf(json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+                if (is_array($json) && count($json)) {
+                    $this->key = $json['key'];
+                    $this->secret = $json['secret'];
+                    register_shutdown_function([$this, 'release']);
+
+                    $pid = pcntl_fork();
+                    if ($pid == 0) {
+                        // child
+                        $callback(...$args);
+                        self::printf("Child returning, releasing lock...\n");
+                        $this->release();
+                        exit(0);
+                    } else if ($pid > 0) {
+                        // parent
+                        while (true) {
+                            sleep(60); // Wait for 1 minute before renewing.
+                            $res = pcntl_waitpid($pid, $status, WNOHANG);
+
+                            // If the process has already exited
+                            if ($res == -1 || $res > 0) {
+                                self::printf("%s", "Child has exited...\n");
+                                $this->release();
+                                return true;
+                            }
+                            self::printf("%s", "Renewing lock...\n");
+                            /** @noinspection PhpUnusedLocalVariableInspection */
+                            $response = $this->request("$this->lockServer/lock/api/renew", [
+                                'key' => $this->key,
+                                'secret' => $this->secret,
+                            ]);
+                            if ($response->getStatusCode() > 299) {
+                                self::printf("Lock is toast...\n");
+                                return true;
+                            }
+                        }
+                    } else {
+                        die(__CLASS__ . ': could not fork');
+                    }
+                }
+                else {
+                    self::printf("Couldn't acquire lock (unknown reply)\n");
+                    return false;
+                }
+            }
+
+            if ($waitSeconds === 0) {
+                self::printf("(not retrying)\n");
+                return false;
+            }
+            if ($waitSeconds > 0 && time() - $startTime > $waitSeconds) {
+                self::printf("(timeout)\n");
+                return false;
+            }
+            self::printf("Lock busy, will retry in 60 seconds...\n");
+            sleep(60);
+        }
+    }
+
     public function acquire($waitSeconds = 0): bool {
         $startTime = time();
-        self::printf("Acquiring lock...\n");
+        self::printf("%s", "Acquiring lock...\n");
         while (true) {
             $response = $this->request("$this->lockServer/lock/api/acquire", [
                     'host' => $this->hostName,

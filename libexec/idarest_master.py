@@ -102,7 +102,7 @@ def idarest_master():
                 raise HTTPRequestError("key not found", 404)
             if self.hosts[key]['secret'] != secret:
                 raise HTTPRequestError("incorrect secret", 403)
-            if interactive or idarest_master_plugin_t.config['master_debug']: print("[idarest_master::Handler::renew] renewing existing host {}".format(key))
+            if interactive or idarest_master_plugin_t.config['master_debug']: print("[idarest_master::Handler::renew] renewing existing lock {}".format(key))
             self.hosts[key]['alive'] = time.time()
             return dict(self.hosts[key])
 
@@ -112,8 +112,9 @@ def idarest_master():
             secret = key + ':' + pid
             if key in self.hosts:
                 if time.time() - self.hosts[key]['alive'] > idarest_master_plugin_t.config['master_lock_timeout']:
-                    if interactive or idarest_master_plugin_t.config['master_debug']: print("[idarest_master::Handler::acquire] replacing existing host {}".format(key))
+                    if interactive or idarest_master_plugin_t.config['master_debug']: print("[idarest_master::Handler::acquire] replacing existing lock {}".format(key))
                 else:
+                    if interactive or idarest_master_plugin_t.config['master_debug']: print("[idarest_master::Handler::acquire] already locked {}".format(key))
                     raise HTTPRequestError("already locked", 409)
 
             self.hosts[key] = value = dict({
@@ -138,7 +139,7 @@ def idarest_master():
             if self.hosts[key]['secret'] != secret:
                 raise HTTPRequestError("incorrect secret", 403)
             self.hosts[key]['alive'] = time.time()
-            if interactive or idarest_master_plugin_t.config['master_debug']: print("[idarest_master::Handler::release] removing existing host {}".format(key))
+            if interactive or idarest_master_plugin_t.config['master_debug']: print("[idarest_master::Handler::release] removing existing lock {}".format(key))
             value = self.hosts.pop(key)
             return value
 
@@ -189,7 +190,7 @@ def idarest_master():
             keys = [x for x, y in self.hosts.items() if y == found]
             if keys:
                 for key in keys:
-                    if idarest_master_plugin_t.config['master_debug']: print("[idarest_master::Handler::release] removing existing host {}".format(key))
+                    if idarest_master_plugin_t.config['master_debug']: print("[idarest_master::Handler::release] removing existing lock {}".format(key))
                     value = self.hosts.pop(key)
             else:
                 value = dict({
@@ -213,7 +214,7 @@ def idarest_master():
                         "Query param specified multiple times : " + k,
                         400)
                 args[k.lower()] = v[0]
-                if idarest_master_plugin_t.config['master_debug']: print('args["{}"]: "{}"'.format(k.lower(), v[0]))
+                # if idarest_master_plugin_t.config['master_debug']: print('args["{}"]: "{}"'.format(k.lower(), v[0]))
             return args
 
         def send_origin_headers(self):
