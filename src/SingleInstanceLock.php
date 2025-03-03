@@ -33,6 +33,7 @@ class SingleInstanceLock implements IInstanceLock
         }
 
         file_put_contents($this->lockFile, $this->pid);
+        chmod($this->lockFile, 0666);
 
         // Register a shutdown function to release the lock if the script unexpectedly ends.
         register_shutdown_function([$this, 'release']);

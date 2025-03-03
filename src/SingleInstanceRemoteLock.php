@@ -31,7 +31,7 @@ class SingleInstanceRemoteLock implements IInstanceLock
      */
     private $secret;
 
-    public static $debug = true;
+    public static $debug = false;
 
     public function __construct(string $lockName, string $lockServer = "https://markt14.fluffyduck.au") {
         if (!$lockName) {
