@@ -31,6 +31,45 @@ function main(...$args) {
 
 ```
 
+## Redis instance locks in Laravel
+
+`MultipleInstanceLock` uses Laravel's default Redis connection. Pass another
+Laravel Redis connection as the second constructor argument if needed. Use
+the same connection, key prefix, lock name, and instance limit across workers
+that share a pool. Each acquisition checks its supplied limit against the
+current number of holders.
+
+```php
+$lock = new \Sfinktah\RemoteLock\MultipleInstanceLock('catalog-import');
+
+if ($lock->acquire(waitSeconds: 5, maxInstances: 3, description: 'Importing supplier A')) {
+    try {
+        doWork();
+    } finally {
+        $lock->release();
+    }
+}
+
+$count = $lock->getInstanceCount();
+$holders = $lock->getInstanceLocks();
+```
+
+Each holder includes an ID, hostname, PID, optional description, and an
+acquisition timestamp in Unix milliseconds.
+Each query is a separate snapshot.
+
+`acquire()` and `lockCall($callback, ...$args)` default to one instance and
+no wait. Locks are freed by explicit release or PHP shutdown. Pass
+`leaseSeconds` to `acquire()` to opt that holder into timed expiry, even if
+its process is still running. The holder's breakdown then includes
+`expires_at_ms`. Redis removes expired holders during acquisition or
+inspection. Omitting `leaseSeconds` gives the holder no timed expiry.
+
+On Linux, callers also reclaim dead holders from the same boot
+and PID namespace. If a holder exits without cleanup and its PID cannot be
+checked locally, its entry requires manual removal from Redis after verifying
+that the holder is gone. Use a separate lock object for each held slot.
+
 # Installing the locking server
 
 
