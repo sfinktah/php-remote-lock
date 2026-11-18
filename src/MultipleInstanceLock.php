@@ -27,7 +27,8 @@ LUA;
     private ?int $ownerPid = null;
     private bool $shutdownRegistered = false;
 
-    public function __construct(?string $scriptName = null, private ?Connection $connection = null)
+    public function __construct(?string $scriptName = null, private ?Connection $connection = null,
+        private bool $recordCaller = false, private ?\Closure $callerResolver = null)
     {
         $scriptName ??= basename($GLOBALS['argv'][1] ?? '') ?: 'singleInstanceRemoteLock';
         $this->key = 'remote-lock:holders:' . hash('sha256', $scriptName);
@@ -65,13 +66,20 @@ LUA;
 
         $id = bin2hex(random_bytes(16));
         $processScope = $this->processScope();
-        $metadata = json_encode([
+        $holder = [
             'id' => $id,
             'hostname' => gethostname() ?: null,
             'pid' => $pid,
             'process_scope' => $processScope,
             'description' => $description,
-        ], JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
+        ];
+        if ($this->recordCaller && $this->callerResolver !== null) {
+            try {
+                $caller = ($this->callerResolver)();
+                if (is_array($caller)) $holder['caller'] = $caller;
+            } catch (\Throwable) { /* Optional caller attribution cannot prevent locking. */ }
+        }
+        $metadata = json_encode($holder, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
 
         $script = self::PRUNE_EXPIRED . "\n" . <<<'LUA'
 if ARGV[5] ~= '' and redis.call('HEXISTS', key, ARGV[5]) == 1 then
